@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto
+    restart: always
+    ports:
+      - 1883:1883
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf 
+    container_name: mosquitto 
+    networks:
+            - mosquitto
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: username
+      MONGO_INITDB_ROOT_PASSWORD: dpassword
+
+    networks:
+          - mosquitto  
+
+  
+  redis:
+    image: redis:latest
+    container_name: redis-container
+    ports:
+      - "6379:6379"
+    networks:
+            - mosquitto  
+  
+  demoapp:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb  
+      - mosquitto
+      - redis
+    networks:
+        - mosquitto  
+
+networks:
+    mosquitto:
+        name: mosquitto
+        driver: bridge 
